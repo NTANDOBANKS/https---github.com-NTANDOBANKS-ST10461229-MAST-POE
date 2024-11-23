@@ -23,9 +23,9 @@ export default function App() {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [fadeAnim] = useState(new Animated.Value(0));
-//Food Section and prices and menu items 
+//Food Section and prices and menu items /array
   const CourseOptions = ["Starter", "Main Course", "Dessert", "Beverage"];
-  const FancyMeals = [ // premium food with decent pricdes , posh meals only do research and test the function
+  const FancyMeals = [ //ARRAY of premium food with decent pricdes , posh meals only do research and test the function
     { dish_Name: "Truffle Pasta", description: "Rich and creamy truffle-infused pasta.", course: "Main Course", price: 350 },
     { dish_Name: "Caviar Canapé", description: "Luxury starter with fine caviar.", course: "Starter", price: 500 },
     { dish_Name: "Chocolate Fondue", description: "Decadent molten chocolate dessert.", course: "Dessert", price: 250 },
@@ -44,7 +44,7 @@ export default function App() {
     }
 
     const newDish: DishDetails = {
-      dish_Name: dishName,                   // Test and refine all the function
+      dish_Name: dishName,                   //Order section, Test and refine all the function
       description,
       course,
       price: priceNum,
@@ -254,6 +254,7 @@ const styles = StyleSheet.create({
 
   summaryContainer: { marginTop: 20 },
   summaryHeading: { fontSize: 28, fontWeight: "bold", color: "#FFD700", textAlign: "center" },
+  // increase , find the perfect size that imapcts the ui nicely
 
   dishItem: { backgroundColor: "#333", padding: 15, marginBottom: 10, borderRadius: 8 },
   dishText: { color: "#FFD700", fontSize: 18 },
@@ -280,3 +281,5 @@ const styles = StyleSheet.create({
   closeMenuButton: { marginTop: 20, backgroundColor: "#555", padding: 10, borderRadius: 8 },
   closeMenuButtonText: { fontSize: 18, color: "#FFD700" },
 });
+
+//filter out some styles and kep the good styles that impact the overall desig
