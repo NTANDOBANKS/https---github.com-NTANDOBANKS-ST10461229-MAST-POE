@@ -11,47 +11,30 @@ import {
   Modal,
   Animated,
 } from "react-native";
-import { DishDetails } from "./type";
-// refine and test be adding more paged
+
 export default function App() {
   const [dishName, setDishName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [course, setCourse] = useState<string>("Select a Course");
   const [price, setPrice] = useState<string>("");
-  const [dishes, setDishes] = useState<DishDetails[]>([]);
+  const [dishes, setDishes] = useState<any[]>([]);
   const [totalDishes, setTotalDishes] = useState<number>(0);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [menuVisible, setMenuVisible] = useState<boolean>(false);
-  const [fadeAnim] = useState(new Animated.Value(0));
-//Food Section and prices and menu items /array
+  const [filterVisible, setFilterVisible] = useState<boolean>(false);
+  const [filteredDishes, setFilteredDishes] = useState<any[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string>("");
+
   const CourseOptions = ["Starter", "Main Course", "Dessert", "Beverage"];
-  const FancyMeals = [ //ARRAY of premium food with decent pricdes , posh meals only do research and test the function
-    { dish_Name: "Truffle Pasta", description: "Rich and creamy truffle-infused pasta.", course: "Main Course", price: 350 },
-    { dish_Name: "Caviar Canapé", description: "Luxury starter with fine caviar.", course: "Starter", price: 500 },
-    { dish_Name: "Chocolate Fondue", description: "Decadent molten chocolate dessert.", course: "Dessert", price: 250 },
-    { dish_Name: "Vintage Wine", description: "Premium aged red wine.", course: "Beverage", price: 800 },
-  ];
 
   const handleSubmit = () => {
-    const priceNum = parseFloat(price); // Test and try improve ,the langaige
-
+    const priceNum = parseFloat(price);
     if (!dishName || !description || course === "Select a Course" || isNaN(priceNum) || priceNum <= 0) {
-      const errorMessage = !dishName || !description || course === "Select a Course"
-        ? "Please complete all the fields."
-        : "Price must be a valid number greater than 0!";
-      Alert.alert("Input Error", errorMessage, [{ text: "OK" }]);
+      Alert.alert("Input Error", "Please complete all fields correctly.", [{ text: "OK" }]);
       return;
     }
-
-    const newDish: DishDetails = {
-      dish_Name: dishName,                   //Order section, Test and refine all the function
-      description,
-      course,
-      price: priceNum,
-    };
-
-    setDishes((prevDishes) => [...prevDishes, newDish]);
-    setTotalDishes((prevTotal) => prevTotal + 1);
+    const newDish = { dish_Name: dishName, description, course, price: priceNum };
+    setDishes((prev) => [...prev, newDish]);
+    setTotalDishes((prev) => prev + 1);
     resetFields();
   };
 
@@ -62,38 +45,22 @@ export default function App() {
     setPrice("");
   };
 
-  const selectCourse = (selectedCourse: string) => {
-    setCourse(selectedCourse);
-    setModalVisible(false);
+  const applyFilter = (filter: string) => {
+    setActiveFilter(filter);
+    setFilteredDishes(dishes.filter((dish) => dish.course === filter));
+    setFilterVisible(false);
   };
 
-  const toggleModal = (visible: boolean) => {
-    if (visible) {
-      setModalVisible(true);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => setModalVisible(false));
-    }
+  const clearFilter = () => {
+    setActiveFilter("");
+    setFilteredDishes([]);
   };
 
-  const toggleMenu = (visible: boolean) => {
-    setMenuVisible(visible);
+  const toggleFilter = (visible: boolean) => {
+    setFilterVisible(visible);
   };
 
-  const handleAddRandomMeal = () => {
-    const randomMeal = FancyMeals[Math.floor(Math.random() * FancyMeals.length)];
-    setDishes((prevDishes) => [...prevDishes, randomMeal]);
-    setTotalDishes((prevTotal) => prevTotal + 1);
-    toggleMenu(false);
-  };
+  const renderDishes = activeFilter ? filteredDishes : dishes;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,6 +68,7 @@ export default function App() {
         <Text style={styles.trackerName}>PRIVATE CHEF{"\n"}CHRISTOFFEL MENU</Text>
       </View>
 
+      //Input Fields of Dish data
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -116,10 +84,7 @@ export default function App() {
           value={description}
           onChangeText={setDescription}
         />
-        <TouchableOpacity
-          style={styles.coursePicker}
-          onPress={() => toggleModal(true)}
-        >
+        <TouchableOpacity style={styles.coursePicker} onPress={() => setModalVisible(true)}>
           <Text style={styles.courseText}>{course}</Text>
         </TouchableOpacity>
         <TextInput
@@ -130,26 +95,19 @@ export default function App() {
           keyboardType="numeric"
           onChangeText={setPrice}
         />
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleSubmit}
-          activeOpacity={0.8}
-        >
+        <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
           <Text style={styles.addButtonText}>Add Dish</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => toggleMenu(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.menuButtonText}>Fancy Menu</Text>
+        <TouchableOpacity style={styles.filterButton} onPress={() => toggleFilter(true)}>
+          <Text style={styles.filterButtonText}>Filter by Course</Text>
         </TouchableOpacity>
       </View>
 
+    //LIST OF DISHES SECTION AND SUMMARY SECTION 
       <View style={styles.summaryContainer}>
-        <Text style={styles.summaryHeading}>ITEMS SUMMARY</Text>
+        <Text style={styles.summaryHeading}>SELECTION SUMMARY</Text>
         <FlatList
-          data={dishes}
+          data={renderDishes}
           renderItem={({ item }) => (
             <View style={styles.dishItem}>
               <Text style={styles.dishText}>{item.dish_Name}</Text>
@@ -163,65 +121,38 @@ export default function App() {
         <Text style={styles.totalDishes}>Total Dishes: {totalDishes}</Text>
       </View>
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => toggleModal(false)}
-      >
-        <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
+      //MODAL FOR COURSE SELECTION AND FILTERING
+      <Modal animationType="fade" transparent={true} visible={modalVisible}>
+        <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <Text style={styles.modalTitle}>Select a Course</Text>
             {CourseOptions.map((option, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.optionButton}
-                onPress={() => selectCourse(option)}
-              >
+              <TouchableOpacity key={index} style={styles.optionButton} onPress={() => setCourse(option)}>
                 <Text style={styles.optionText}>{option}</Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => toggleModal(false)}
-            >
+            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
       </Modal>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={menuVisible}
-        onRequestClose={() => toggleMenu(false)}
-      >
-        <View style={styles.menuContainer}>
-          <View style={styles.menuView}>
-            <Text style={styles.menuTitle}>Lavish Meals</Text>  // elegant language only replace all common words make it more elegant
-            <FlatList
-              data={FancyMeals}
-              renderItem={({ item }) => (
-                <View style={styles.fancyDishItem}>
-                  <Text style={styles.fancyDishText}>{item.dish_Name}</Text>
-                  <Text style={styles.fancyDishText}>{item.description}</Text>
-                  <Text style={styles.fancyDishText}>R{item.price}</Text>
-                </View>
-              )}
-              keyExtractor={(item, index) => index.toString()}
-            />
-            <TouchableOpacity
-              style={styles.addRandomButton}
-              onPress={handleAddRandomMeal}
-            >
-              <Text style={styles.addRandomButtonText}>Add Random Meal</Text>
+      //MODAL FOR COURSE FILTERING AND RESETTING
+      <Modal animationType="slide" transparent={true} visible={filterVisible}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Filter by Course</Text>
+            {CourseOptions.map((option, index) => (
+              <TouchableOpacity key={index} style={styles.optionButton} onPress={() => applyFilter(option)}>
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.resetButton} onPress={clearFilter}>
+              <Text style={styles.resetButtonText}>Clear Filter</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.closeMenuButton}
-              onPress={() => toggleMenu(false)}
-            >
-              <Text style={styles.closeMenuButtonText}>Close</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={() => toggleFilter(false)}>
+              <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -229,7 +160,8 @@ export default function App() {
     </SafeAreaView>
   );
 }
-// filter the designs and orgainize and strucure it better and remove things you dont like
+// SECTION THAT DEALS WITH AND AESTHECTICS
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000", padding: 20 },
 
@@ -238,48 +170,30 @@ const styles = StyleSheet.create({
   trackerName: { fontSize: 32, fontWeight: "bold", color: "#FFD700", textAlign: "center" },
 
   inputContainer: { marginBottom: 20 },
-
-  input: {
-    height: 50, borderColor: "#FFD700", borderWidth: 2, borderRadius: 8, marginBottom: 10, paddingLeft: 10, color: "#FFF", backgroundColor: "#222", fontSize: 18,
-
-  },
+  input: { height: 50, borderColor: "#FFD700", borderWidth: 2, borderRadius: 8, marginBottom: 10, paddingLeft: 10, color: "#FFF", backgroundColor: "#222", fontSize: 18 },
   coursePicker: { height: 50, borderColor: "#FFD700", borderWidth: 2, borderRadius: 8, marginBottom: 10, justifyContent: "center", paddingLeft: 10, backgroundColor: "#222" },
-
   courseText: { color: "#FFF", fontSize: 18 },
+  
   addButton: { backgroundColor: "#FFD700", height: 50, justifyContent: "center", alignItems: "center", borderRadius: 8, marginBottom: 10 },
-
   addButtonText: { fontSize: 20, color: "#000", fontWeight: "bold" },
-  menuButton: { backgroundColor: "#555", height: 50, justifyContent: "center", alignItems: "center", borderRadius: 8 },
-  menuButtonText: { fontSize: 20, color: "#FFD700", fontWeight: "bold" },
 
+  filterButton: { backgroundColor: "#555", height: 50, justifyContent: "center", alignItems: "center", borderRadius: 8 },
+
+  filterButtonText: { fontSize: 20, color: "#FFD700", fontWeight: "bold" },
   summaryContainer: { marginTop: 20 },
   summaryHeading: { fontSize: 28, fontWeight: "bold", color: "#FFD700", textAlign: "center" },
-  // increase , find the perfect size that imapcts the ui nicely
 
   dishItem: { backgroundColor: "#333", padding: 15, marginBottom: 10, borderRadius: 8 },
   dishText: { color: "#FFD700", fontSize: 18 },
+  
   totalDishes: { fontSize: 22, fontWeight: "bold", marginTop: 10, color: "#FFD700", textAlign: "center" },
-
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.8)" },
   modalView: { width: "80%", backgroundColor: "#FFF", borderRadius: 20, padding: 20, alignItems: "center" },
-
   modalTitle: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
   optionButton: { padding: 12, borderBottomWidth: 1, borderBottomColor: "#FFD700", width: "100%", alignItems: "center" },
-
   optionText: { fontSize: 18, color: "#000" },
   closeButton: { marginTop: 20, backgroundColor: "#FFD700", padding: 10, borderRadius: 8 },
-  closeButtonText: { fontSize: 18, color: "#000" },                                                                             // Cut of here or refine come back to make sure the UI IS AESTHETICALLY PLEASE
-
-  menuContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.8)" },
-
-  menuView: { width: "80%", backgroundColor: "#FFF", borderRadius: 20, padding: 20, alignItems: "center" },
-  menuTitle: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
-  fancyDishItem: { backgroundColor: "#DDD", padding: 15, marginBottom: 10, borderRadius: 8 },
-  fancyDishText: { color: "#333", fontSize: 18 },
-  addRandomButton: { marginTop: 10, backgroundColor: "#FFD700", padding: 10, borderRadius: 8 },
-  addRandomButtonText: { fontSize: 18, color: "#000" },
-  closeMenuButton: { marginTop: 20, backgroundColor: "#555", padding: 10, borderRadius: 8 },
-  closeMenuButtonText: { fontSize: 18, color: "#FFD700" },
+  closeButtonText: { fontSize: 18, color: "#000" },
+  resetButton: { marginTop: 10, backgroundColor: "#FF4500", padding: 10, borderRadius: 8 },
+  resetButtonText: { fontSize: 18, color: "#FFF" },
 });
-
-//filter out some styles and kep the good styles that impact the overall desig
