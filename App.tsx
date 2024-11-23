@@ -20,18 +20,26 @@ export default function App() {
   const [dishes, setDishes] = useState<any[]>([]);
   const [removedDishes, setRemovedDishes] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [fancyMenuVisible, setFancyMenuVisible] = useState<boolean>(false);
   const [restoreModalVisible, setRestoreModalVisible] = useState<boolean>(false);
   const [fadeAnim] = useState(new Animated.Value(1)); // Animation state
 
   const CourseOptions = ["Starter", "Main Course", "Dessert", "Beverage"];
+  const FancyMeals = [
+    { dish_Name: "Truffle Pasta", description: "Rich truffle-infused pasta.", course: "Main Course", price: 350 },
+    { dish_Name: "Caviar Canapé", description: "Luxury starter with fine caviar.", course: "Starter", price: 500 },
+    { dish_Name: "Chocolate Fondue", description: "Molten chocolate dessert.", course: "Dessert", price: 250 },
+    { dish_Name: "Vintage Wine", description: "Premium aged red wine.", course: "Beverage", price: 800 },
+  ];
 
   const handleSubmit = () => {
     const priceNum = parseFloat(price);
-    if (!dishName || !description || course === "Select a Course" || isNaN(priceNum) || priceNum <= 0) {
+    if (!dishName.trim() || !description.trim() || course === "Select a Course" || isNaN(priceNum) || priceNum <= 0) {
       Alert.alert("Input Error", "Please complete all fields correctly.", [{ text: "OK" }]);
       return;
     }
-    const newDish = { dish_Name: dishName, description, course, price: priceNum };
+
+    const newDish = { dish_Name: dishName.trim(), description: description.trim(), course, price: priceNum };
     setDishes((prev) => [...prev, newDish]);
     resetFields();
   };
@@ -64,14 +72,19 @@ export default function App() {
     setRemovedDishes((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const addFancyMeal = (meal: any) => {
+    setDishes((prev) => [...prev, meal]);
+    setFancyMenuVisible(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      //HEADER SPACE
       <View style={styles.headingContainer}>
         <Text style={styles.trackerName}>PRIVATE CHEF{"\n"}CHRISTOFFEL MENU</Text>
       </View>
 
-      {/* Input Section */}
+    //FORM SPACE
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -80,7 +93,7 @@ export default function App() {
           value={dishName}
           onChangeText={setDishName}
         />
-        <TextInput
+        <TextInput 
           style={styles.input}
           placeholder="Description"
           placeholderTextColor="#BBB"
@@ -101,6 +114,9 @@ export default function App() {
         <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
           <Text style={styles.addButtonText}>Add Dish</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.fancyMenuButton} onPress={() => setFancyMenuVisible(true)}>
+          <Text style={styles.fancyMenuButtonText}>View Fancy Menu</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.restoreButton}
           onPress={() => setRestoreModalVisible(true)}
@@ -109,9 +125,10 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      {/* Dishes List */}
+      //MENU SPACE
       <View style={styles.summaryContainer}>
         <Text style={styles.summaryHeading}>CURRENT MENU</Text>
+        <Text style={styles.totalDishes}>Total Dishes: {dishes.length}</Text>
         <FlatList
           data={dishes}
           renderItem={({ item, index }) => (
@@ -132,7 +149,7 @@ export default function App() {
         />
       </View>
 
-      {/* Course Selection Modal */}
+      //MODAL SPACE
       <Modal animationType="fade" transparent={true} visible={modalVisible}>
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
@@ -159,7 +176,35 @@ export default function App() {
         </View>
       </Modal>
 
-      {/* Restore Removed Dishes Modal */}
+      //FANCY MENU SPACE
+      <Modal animationType="slide" transparent={true} visible={fancyMenuVisible}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Fancy Meals</Text>
+            {FancyMeals.map((meal, index) => (
+              <View key={index} style={styles.fancyMealItem}>
+                <Text style={styles.fancyMealText}>{meal.dish_Name}</Text>
+                <Text style={styles.fancyMealText}>{meal.description}</Text>
+                <Text style={styles.fancyMealText}>R{meal.price}</Text>
+                <TouchableOpacity
+                  style={styles.addFancyButton}
+                  onPress={() => addFancyMeal(meal)}
+                >
+                  <Text style={styles.addFancyButtonText}>Add to Menu</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setFancyMenuVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      //RESTORE SPACE
       <Modal
         animationType="slide"
         transparent={true}
@@ -201,7 +246,7 @@ export default function App() {
     </SafeAreaView>
   );
 }
-
+// sTYLING SPACE AND STYLING TESTING
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000", padding: 20 },
   headingContainer: { marginBottom: 20 },
@@ -212,10 +257,13 @@ const styles = StyleSheet.create({
   courseText: { color: "#FFF", fontSize: 18 },
   addButton: { backgroundColor: "#FFD700", height: 50, justifyContent: "center", alignItems: "center", borderRadius: 8, marginBottom: 10 },
   addButtonText: { fontSize: 20, color: "#000", fontWeight: "bold" },
+  fancyMenuButton: { backgroundColor: "#444", height: 50, justifyContent: "center", alignItems: "center", borderRadius: 8 },
+  fancyMenuButtonText: { fontSize: 20, color: "#FFD700", fontWeight: "bold" },
   restoreButton: { backgroundColor: "#444", height: 50, justifyContent: "center", alignItems: "center", borderRadius: 8 },
   restoreButtonText: { fontSize: 20, color: "#FFD700", fontWeight: "bold" },
   summaryContainer: { marginTop: 20 },
   summaryHeading: { fontSize: 28, fontWeight: "bold", color: "#FFD700", textAlign: "center" },
+  totalDishes: { fontSize: 22, fontWeight: "bold", marginTop: 10, color: "#FFD700", textAlign: "center" },
   dishItem: { backgroundColor: "#333", padding: 15, marginBottom: 10, borderRadius: 8 },
   dishText: { color: "#FFD700", fontSize: 18 },
   removeButton: { marginTop: 10, backgroundColor: "#FF4500", padding: 10, borderRadius: 8 },
@@ -227,9 +275,11 @@ const styles = StyleSheet.create({
   optionText: { fontSize: 18, color: "#000" },
   closeButton: { marginTop: 20, backgroundColor: "#FFD700", padding: 10, borderRadius: 8 },
   closeButtonText: { fontSize: 18, color: "#000" },
+  fancyMealItem: { backgroundColor: "#DDD", padding: 15, marginBottom: 10, borderRadius: 8 },
+  fancyMealText: { fontSize: 18, color: "#333" },
+  addFancyButton: { marginTop: 10, backgroundColor: "#FFD700", padding: 10, borderRadius: 8 },
+  addFancyButtonText: { fontSize: 18, color: "#000" },
   restoreDishButton: { marginTop: 10, backgroundColor: "#32CD32", padding: 10, borderRadius: 8 },
   restoreDishButtonText: { fontSize: 18, color: "#FFF" },
   noDishesText: { fontSize: 18, color: "#FFF", textAlign: "center", marginTop: 20 },
 });
-
-// KEEP THE SAME WORKS FINE
